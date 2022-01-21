@@ -1,0 +1,15 @@
+version: '3.4'
+
+services:
+  movie.api:
+    image: ${DOCKER_REGISTRY-}movieapi
+    build:
+      context: .
+      dockerfile: src/services/movie.api/Dockerfile
+
+  movie.web:
+    image: ${DOCKER_REGISTRY-}movieweb
+    build:
+      context: .
+      dockerfile: src/web/movie.web/Dockerfile
+
