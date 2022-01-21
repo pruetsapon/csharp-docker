@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using movie.api.Infrastructure;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,7 +8,9 @@ ConfigurationManager configuration = builder.Configuration;
 IWebHostEnvironment environment = builder.Environment;
 
 // default setup
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddNewtonsoftJson();
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() {
@@ -14,6 +18,21 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1",
         Description = "The Movie Service HTTP API"
     });
+});
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy",
+        builder => builder
+        .SetIsOriginAllowed((host) => true)
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials());
+});
+
+builder.Services.AddDbContext<MovieContext>(options =>
+{
+    options.UseNpgsql(configuration["ConnectionString"]);
 });
 
 var seqServerUrl = configuration["Serilog:SeqServerUrl"];
@@ -46,12 +65,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
+app.UseCors("CorsPolicy");
+
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapDefaultControllerRoute();
     endpoints.MapControllers();
 });
-
-app.UseSerilogRequestLogging();
 
 app.Run();

@@ -4,14 +4,19 @@ services:
   seq:
     image: datalust/seq:latest
 
+  postgresql:
+    image: postgres
+
   movie.api:
-    image: ${DOCKER_REGISTRY-}movieapi
+    image: ${DOCKER_REGISTRY-}movieapi:${PLATFORM:-linux}-${TAG:-latest}
     build:
       context: .
       dockerfile: src/services/movie.api/Dockerfile
+    depends_on:
+      - postgresql
 
   movie.web:
-    image: ${DOCKER_REGISTRY-}movieweb
+    image: ${DOCKER_REGISTRY-}movieweb:${PLATFORM:-linux}-${TAG:-latest}
     build:
       context: .
       dockerfile: src/web/movie.web/Dockerfile

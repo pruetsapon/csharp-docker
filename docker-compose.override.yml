@@ -8,13 +8,24 @@ services:
     ports:
       - "5340:80"
 
+  postgresql:
+    environment:
+      - POSTGRES_PASSWORD=1q2w3e4r
+      - TZ=Asia/Jakarta
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgresdata:/var/lib/postgresql/data
+
   movie.api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
+      - ConnectionString=Host=postgresdata;User ID=postgres;Password=1q2w3e4r;Database=movie;Pooling=true;
+      - PATH_BASE=/movie-api
       - TZ=Asia/Jakarta
     ports:
-      - "3001:80"
+      - "5210:80"
 
   movie.web:
     environment:
@@ -22,4 +33,8 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - TZ=Asia/Jakarta
     ports:
-      - "3000:80"
+      - "5211:80"
+
+volumes:
+  postgresdata:
+    external: false
