@@ -1,6 +1,41 @@
 var builder = WebApplication.CreateBuilder(args);
+
+//ConfigurationManager configuration = builder.Configuration;
+//IWebHostEnvironment environment = builder.Environment;
+
+// default setup
+builder.Services.AddControllers();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new() {
+        Title = "Movie Service",
+        Version = "v1",
+        Description = "The Movie Service HTTP API"
+    });
+});
+
 var app = builder.Build();
 
-app.MapGet("/", () => "Hello World!");
+IConfiguration configuration = app.Configuration;
+IWebHostEnvironment environment = app.Environment;
+
+var pathBase = configuration["PATH_BASE"];
+if (!string.IsNullOrEmpty(pathBase))
+{
+    app.UsePathBase(pathBase);
+}
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c => c.SwaggerEndpoint($"{ (!string.IsNullOrEmpty(pathBase) ? pathBase : string.Empty) }/swagger/v1/swagger.json", "Movie Service v1"));
+}
+
+app.UseRouting();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapDefaultControllerRoute();
+    endpoints.MapControllers();
+});
 
 app.Run();
