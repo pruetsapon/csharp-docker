@@ -1,50 +1,32 @@
-using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using movie.api.Infrastructure;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
     Args = args,
     ApplicationName = typeof(Program).Assembly.FullName,
-    ContentRootPath = Directory.GetCurrentDirectory()
+    ContentRootPath = Directory.GetCurrentDirectory(),
+    WebRootPath = "wwwroot"
 });
 
 ConfigurationManager configuration = builder.Configuration;
 IWebHostEnvironment environment = builder.Environment;
 
-// default setup
-builder.Services.AddControllers()
-    .AddNewtonsoftJson();
+// Add services to the container.
+builder.Services.AddControllersWithViews();
 
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new() {
-        Title = "Movie Service",
-        Version = "v1",
-        Description = "The Movie Service HTTP API"
-    });
-});
-
+builder.Services.AddOptions();
 builder.Services.AddHealthChecks()
     .AddCheck("self", () => HealthCheckResult.Healthy());
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("CorsPolicy",
-        builder => builder
-        .SetIsOriginAllowed((host) => true)
-        .AllowAnyMethod()
-        .AllowAnyHeader()
-        .AllowCredentials());
-});
+builder.Services
+    .AddHealthChecksUI()
+    .AddInMemoryStorage();
 
-builder.Services.AddDbContext<MovieContext>(options =>
-{
-    options.UseNpgsql(configuration["ConnectionString"]);
-});
+builder.Services.AddMvc();
+
+builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
 var seqServerUrl = configuration["Serilog:SeqServerUrl"];
 var logstashUrl = configuration["Serilog:LogstashgUrl"];
@@ -60,8 +42,13 @@ builder.Host.UseSerilog((ctx, lc) => lc
 
 var app = builder.Build();
 
-//IConfiguration configuration = app.Configuration;
-//IWebHostEnvironment environment = app.Environment;
+// Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
+}
 
 var pathBase = configuration["PATH_BASE"];
 if (!string.IsNullOrEmpty(pathBase))
@@ -69,28 +56,29 @@ if (!string.IsNullOrEmpty(pathBase))
     app.UsePathBase(pathBase);
 }
 
-if (app.Environment.IsDevelopment())
+app.UseHealthChecksUI(config =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint($"{ (!string.IsNullOrEmpty(pathBase) ? pathBase : string.Empty) }/swagger/v1/swagger.json", "Movie Service v1"));
-}
+    config.ResourcesPath = string.IsNullOrEmpty(pathBase) ? "/ui/resources" : $"{pathBase}/ui/resources";
+    config.UIPath = "/hc-ui";
+});
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
 
 app.UseRouting();
-app.UseCors("CorsPolicy");
-
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapDefaultControllerRoute();
-    endpoints.MapControllers();
-    endpoints.MapHealthChecks("/hc", new HealthCheckOptions()
-    {
-        Predicate = _ => true,
-        ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
-    });
     endpoints.MapHealthChecks("/liveness", new HealthCheckOptions
     {
         Predicate = r => r.Name.Contains("self")
     });
 });
+
+app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

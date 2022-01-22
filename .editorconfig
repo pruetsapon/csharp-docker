@@ -2,6 +2,6 @@
 indent_style = space 
 indent_size = 4
 
-[*.{yml,yaml,json}] 
+[*.{yml,yaml,json,csproj}]
 indent_style = space
 indent_size = 2

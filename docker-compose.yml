@@ -7,7 +7,7 @@ services:
   postgresql:
     image: postgres
 
-  movie.api:
+  movieapi:
     image: ${DOCKER_REGISTRY-}movieapi:${PLATFORM:-linux}-${TAG:-latest}
     build:
       context: .
@@ -15,8 +15,14 @@ services:
     depends_on:
       - postgresql
 
-  movie.web:
+  movieweb:
     image: ${DOCKER_REGISTRY-}movieweb:${PLATFORM:-linux}-${TAG:-latest}
     build:
       context: .
       dockerfile: src/web/movie.web/Dockerfile
+
+  moviestatus:
+    image: ${DOCKER_REGISTRY-}moviestatus:${PLATFORM:-linux}-${TAG:-latest}
+    build:
+      context: .
+      dockerfile: src/web/movie.status/Dockerfile

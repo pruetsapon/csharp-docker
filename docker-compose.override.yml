@@ -17,7 +17,7 @@ services:
     volumes:
       - postgresdata:/var/lib/postgresql/data
 
-  movie.api:
+  movieapi:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
@@ -27,13 +27,25 @@ services:
     ports:
       - "5210:80"
 
-  movie.web:
+  movieweb:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - TZ=Asia/Jakarta
     ports:
       - "5211:80"
+
+  moviestatus:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - HealthChecksUI__HealthChecks__0__Name=Movie Web HTTP Check
+      - HealthChecksUI__HealthChecks__0__Uri=http://movieweb/hc
+      - HealthChecksUI__HealthChecks__1__Name=Movie API HTTP Check
+      - HealthChecksUI__HealthChecks__1__Uri=http://movieapi/hc
+      - TZ=Asia/Jakarta
+    ports:
+      - "5212:80"
 
 volumes:
   postgresdata:
