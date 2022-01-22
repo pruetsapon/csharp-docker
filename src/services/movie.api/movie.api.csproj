@@ -28,4 +28,8 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\shared\movie.data.objects\movie.data.objects.csproj" />
+  </ItemGroup>
+
 </Project>

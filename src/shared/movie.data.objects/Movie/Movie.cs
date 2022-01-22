@@ -1,4 +1,4 @@
-﻿namespace movie.api.Models
+﻿namespace movie.data.objects
 {
     public class Movie
     {
