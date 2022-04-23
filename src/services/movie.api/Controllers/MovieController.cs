@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using movie.api.Infrastructure;
+using movie.api.Models;
 using movie.data.objects;
 using System.Net;
 
@@ -21,15 +22,55 @@ namespace movie.api.Controllers
             _logger = logger;
         }
 
-        [HttpGet("list")]
-        [ProducesResponseType(typeof(List<Movie>), (int)HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(IEnumerable<Movie>), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult> ListAsync()
+        [HttpGet]
+        [ProducesResponseType(typeof(ResultSet<Movie>), (int)HttpStatusCode.OK)]
+        public async Task<ActionResult> ListWithPageAsync(
+            [FromQuery] string? code,
+            [FromQuery] string? name,
+            [FromQuery] int? page = 1,
+            [FromQuery] int? rows = 10)
         {
             try
             {
                 var movies = _movieContext.Movies.AsQueryable();
-                return Ok(await movies.ToListAsync());
+                var resultSet = new MovieResult(movies, (int)rows);
+                if (!string.IsNullOrEmpty(code))
+                {
+                    resultSet.ApplyCodeFilter(code);
+                }
+                if (!string.IsNullOrEmpty(name))
+                {
+                    resultSet.ApplyNameFilter(name);
+                }
+                return Ok(await resultSet.GetItemsByPageAsync((int)page));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[{AppName}] ERROR get movie list with page: {Exception}", Program.AppName, ex);
+                return BadRequest();
+            }
+        }
+
+        [HttpGet("list")]
+        [ProducesResponseType(typeof(List<Movie>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(IEnumerable<Movie>), (int)HttpStatusCode.OK)]
+        public async Task<ActionResult> ListAsync(
+            [FromQuery] string? code,
+            [FromQuery] string? name)
+        {
+            try
+            {
+                var movies = _movieContext.Movies.AsQueryable();
+                var resultSet = new MovieResult(movies);
+                if (!string.IsNullOrEmpty(code))
+                {
+                    resultSet.ApplyCodeFilter(code);
+                }
+                if (!string.IsNullOrEmpty(name))
+                {
+                    resultSet.ApplyNameFilter(name);
+                }
+                return Ok(await resultSet.GetAllItemsAsync());
             }
             catch (Exception ex)
             {
