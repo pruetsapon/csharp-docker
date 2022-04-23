@@ -1,6 +1,6 @@
 ﻿namespace movie.data.objects
 {
-    public class MovieViewModel
+    public class MovieRequest
     {
         public string Code { get; set; }
         public string Name { get; set; }

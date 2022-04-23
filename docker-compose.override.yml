@@ -15,13 +15,13 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgresdata:/var/lib/postgresql/data
+      - postgresql:/var/lib/postgresql/data
 
   movieapi:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
-      - ConnectionString=Host=postgresdata;User ID=postgres;Password=1q2w3e4r;Database=movie;Pooling=true;
+      - ConnectionString=Host=postgresql;User ID=postgres;Password=1q2w3e4r;Database=movie;Pooling=true;
       - PATH_BASE=/movie-api
       - TZ=Asia/Jakarta
     ports:
@@ -48,5 +48,5 @@ services:
       - "5212:80"
 
 volumes:
-  postgresdata:
+  postgresql:
     external: false

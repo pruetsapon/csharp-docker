@@ -60,8 +60,7 @@ builder.Host.UseSerilog((ctx, lc) => lc
 
 var app = builder.Build();
 
-//IConfiguration configuration = app.Configuration;
-//IWebHostEnvironment environment = app.Environment;
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var pathBase = configuration["PATH_BASE"];
 if (!string.IsNullOrEmpty(pathBase))
@@ -94,3 +93,8 @@ app.UseEndpoints(endpoints =>
 });
 
 app.Run();
+
+public partial class Program
+{
+    public static string AppName = AppDomain.CurrentDomain.FriendlyName;
+}
